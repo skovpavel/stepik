@@ -116,8 +116,8 @@ FROM back_payment;
 
 /*Задание
 Удалить из таблицы fine информацию о нарушениях, совершенных раньше 1 февраля 2020 года. */
-UPDATE fine
-DELETE name, numder_plate, date_violation, date_payment, violation
-WHERE date_violation<2023/02/01;
+DELETE FROM fine
+WHERE date_violation<20200201;
 SELECT *
 FROM fine;
+
