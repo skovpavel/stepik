@@ -58,12 +58,26 @@ ORDER BY name, number_plate, violation;
 */
 
 UPDATE fine,
-(SELECT name, number_plate, violation, (SUM(sum_fine)*2) AS new_fine
+(SELECT name, number_plate, violation, SUM(sum_fine)
 FROM fine
 GROUP BY name, number_plate, violation
 HAVING count(*)>1) query_in
 SET fine.sum_fine=fine.sum_fine*2
 WHERE fine.name=query_in.name AND fine.date_payment IS NULL;
+SELECT *
+FROM fine;
+
+/* 2 вариант */
+
+CREATE TABLE query_in (
+SELECT name, number_plate, violation
+FROM fine
+GROUP BY name, number_plate, violation
+HAVING count(*)>1);
+
+UPDATE fine  AS f, query_in AS q
+SET f.sum_fine=f.sum_fine*2
+WHERE (f.name, f.number_plate, f.violation) = (q.name, q.number_plate, q.violation) AND f.date_payment IS NULL;
 SELECT *
 FROM fine;
 
@@ -87,5 +101,23 @@ SET f.date_payment=p.date_payment,
 f.sum_fine=IF((p.date_payment-p.date_violation)<=20, f.sum_fine/2, f.sum_fine)
 WHERE f.name=p.name AND f.number_plate=p.number_plate AND f.violation=p.violation AND f.date_payment IS NULL;
 
+SELECT *
+FROM fine;
+
+/*Задание
+Создать новую таблицу back_payment, куда внести информацию о неоплаченных штрафах (Фамилию и инициалы водителя, номер машины, нарушение, сумму штрафа  и  дату нарушения) из таблицы fine. */
+CREATE TABLE back_payment (
+    SELECT name, number_plate, violation, sum_fine, date_violation
+    FROM fine
+    WHERE date_payment IS NULL
+);
+SELECT *
+FROM back_payment;
+
+/*Задание
+Удалить из таблицы fine информацию о нарушениях, совершенных раньше 1 февраля 2020 года. */
+UPDATE fine
+DELETE name, numder_plate, date_violation, date_payment, violation
+WHERE date_violation<2023/02/01;
 SELECT *
 FROM fine;
