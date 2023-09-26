@@ -30,3 +30,54 @@ city_id	name_city
 SELECT name_city, name_author, DATE_ADD('2020-01-01', INTERVAL (RAND() * 365) DAY) AS Дата
 FROM city, author
 ORDER BY name_city, Дата DESC;
+
+/*Если хотите, чтобы RAND  каждый раз выдавал вам одну и ту же последовательность, необходимо инициализировать генератор через так называемый seed.
+А именно - использовать некоторое число внутри RAND() - например RAND(42).
+
+Это можно оформить через отдельную переменную - например @seed - и затем использовать ее. Однако, оценщик платформы не засчитывает такую реализацию, поэтому в выложенном решении я закомментировал переменную и использовал хардкод.
+SET @seed = 42; -- инициализируем переменную seed
+
+SELECT name_city, 
+       name_author, 
+       DATE_ADD('2020-01-01', INTERVAL FLOOR(RAND(42) * 365) DAY) as Дата -- применяем: @seed вместо 42
+FROM author CROSS JOIN city
+ORDER BY name_city, Дата DESC;
+*/
+
+/*Задание
+ Вывести информацию о книгах (жанр, книга, автор), относящихся к жанру, включающему слово «роман» в отсортированном по названиям книг виде.*/
+SELECT name_genre, title, name_author
+FROM genre
+INNER JOIN book ON genre.genre_id=book.genre_id
+INNER JOIN author ON book.author_id=author.author_id
+WHERE name_genre='Роман'
+ORDER BY title;
+
+/*Многие условие добавили в WHERE, но с точки зрения скорости лучше уже на шаге FROM в первом JOIN отрезать лишние данные, поскольку при больших таблицах операция JOIN весьма тежеловесна.*/
+SELECT name_genre, title, name_author
+  FROM genre g
+       INNER JOIN book b
+       ON g.genre_id = b.genre_id
+          AND g.name_genre LIKE '%_оман%'
+       INNER JOIN author USING(author_id)
+ ORDER BY title;
+
+ SELECT name_genre,
+       title,
+       name_author
+  FROM (SELECT *
+          FROM genre
+         WHERE name_genre = 'Роман') AS genre
+       JOIN book USING(genre_id)
+       JOIN author USING(author_id)
+ ORDER BY title ASC;
+ --с помощью AS genre создается временная таблица,  на основе выборки из запроса (который в скобках перед AS --genre)
+
+ /*Задание
+Посчитать количество экземпляров  книг каждого автора из таблицы author.  Вывести тех авторов,  количество книг которых меньше 10, в отсортированном по возрастанию количества виде. Последний столбец назвать Количество.*/
+SELECT name_author, SUM(amount) AS Количество
+FROM author
+LEFT JOIN book ON author.author_id=book.author_id
+GROUP BY name_author
+HAVING SUM(amount)<10 OR SUM(amount)IS NULL
+ORDER BY Количество;
